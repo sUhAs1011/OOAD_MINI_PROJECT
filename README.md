@@ -15,7 +15,7 @@ authentication module are:
 ### Module 2:Income And Expense Tracking
 This Income And Expense Tracking module keeps track of the user's cash by recording user's income and expenditure.The key components of this
 module are:
-## 1)Income Management
+1)Income Management
 2)Expense tracking
 3)Categorization
 4)Transaction History
