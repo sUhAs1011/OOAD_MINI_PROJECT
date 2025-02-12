@@ -8,9 +8,9 @@ Coming to our project we have implemented personal finance manager using MVC arc
 ### Module 1: User Authentication
 The user authentication module handles the security and personalization aspects of the system, the main responsibilites one of a user
 authentication module are:
-## 1)User Registration
-## 2)User Login
-## 3)Profile Management
+1)User Registration
+2)User Login
+3)Profile Management
 
 ### Module 2:Income And Expense Tracking
 This Income And Expense Tracking module keeps track of the user's cash by recording user's income and expenditure.The key components of this
