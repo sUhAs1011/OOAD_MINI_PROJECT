@@ -24,3 +24,9 @@ Coming to our project we have implemented personal electronic voting system usin
 - Enables system administrators to monitor and detect any unauthorized access or tampering.
 - Includes features for auditing votes and ensuring the integrity of the voting process.
 
+Team Members:  
+- Soumya Ranjan Mishra (PES2UG22CS571)  
+- Suhas Venkata Karamalaputti (PES2UG22CS590)  
+- Sirgireddy Shuklav Reddy (PES2UG22CS557)  
+- Soham Praveen Salunke (PES2UG22CS565)
+
