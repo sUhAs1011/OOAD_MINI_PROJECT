@@ -1,0 +1,129 @@
+/* Main CSS for E-Voting System */
+
+.root {
+    -fx-font-family: "System";
+    -fx-font-size: 14px;
+}
+
+/* Menu styles */
+.menu-item {
+    -fx-cursor: hand;
+}
+
+.menu-item:hover {
+    -fx-background-color: #34495e;
+}
+
+/* Button styles */
+.dashboard-button {
+    -fx-background-color: transparent;
+    -fx-border-radius: 3px;
+    -fx-cursor: hand;
+    -fx-padding: 8px 12px;
+    -fx-font-size: 14px;
+    -fx-min-width: 100px;
+}
+
+.primary-button {
+    -fx-background-color: #2980b9;
+    -fx-text-fill: white;
+    -fx-border-radius: 3px;
+    -fx-background-radius: 3px;
+    -fx-cursor: hand;
+    -fx-padding: 10px 20px;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+}
+
+.primary-button:hover {
+    -fx-background-color: #3498db;
+}
+
+.secondary-button {
+    -fx-background-color: white;
+    -fx-text-fill: #2c3e50;
+    -fx-border-color: #c8c8c8;
+    -fx-border-radius: 3px;
+    -fx-background-radius: 3px;
+    -fx-cursor: hand;
+    -fx-padding: 10px 20px;
+    -fx-font-size: 14px;
+}
+
+.secondary-button:hover {
+    -fx-background-color: #f5f5f5;
+}
+
+/* Table styles */
+.table-view {
+    -fx-background-color: transparent;
+}
+
+.table-view .column-header {
+    -fx-background-color: #2980b9;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-padding: 10px;
+}
+
+.table-view .column-header .label {
+    -fx-text-fill: white;
+}
+
+.table-view .table-row-cell {
+    -fx-border-color: transparent;
+    -fx-table-cell-border-color: transparent;
+}
+
+.table-view .table-row-cell:odd {
+    -fx-background-color: #f9f9f9;
+}
+
+.table-view .table-row-cell:even {
+    -fx-background-color: white;
+}
+
+/* Dialog styles */
+.dialog-pane {
+    -fx-background-color: white;
+}
+
+.dialog-pane .header-panel {
+    -fx-background-color: #2980b9;
+}
+
+.dialog-pane .header-panel .label {
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+
+/* Text input styles */
+.text-field, .password-field, .text-area {
+    -fx-background-color: white;
+    -fx-border-color: #c8c8c8;
+    -fx-border-radius: 3px;
+    -fx-padding: 8px;
+}
+
+.text-field:focused, .password-field:focused, .text-area:focused {
+    -fx-border-color: #2980b9;
+}
+
+/* Radio button styles */
+.radio-button {
+    -fx-padding: 8px 0;
+}
+
+.radio-button .radio {
+    -fx-border-color: #c8c8c8;
+    -fx-border-radius: 100%;
+    -fx-background-color: white;
+}
+
+.radio-button:selected .radio {
+    -fx-border-color: #2980b9;
+}
+
+.radio-button:selected .radio .dot {
+    -fx-background-color: #2980b9;
+} 
