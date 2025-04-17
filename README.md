@@ -1,4 +1,4 @@
-# OOAD_MINI_PROJECT
+# Electronic Voting System Using MVC Architecture
 
 My sixth semester OOAD(Object Oriented Analysis And Design) mini-project in Java Programming language using Objected Oriented Concepts and MVC architecture. MVC is basically Model-View-Controller, which is basically a design pattern used in software development and helps in making applications more scalable, organizable and maintainable.
 
