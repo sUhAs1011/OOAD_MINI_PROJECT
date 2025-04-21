@@ -49,8 +49,14 @@ public interface ViewInterface {
     // Show registration screen
     void showRegistrationScreen(Consumer<String[]> registrationListener);
     
+    // Show registration screen with role selection (admin or voter)
+    void showRegistrationWithRoleScreen(Consumer<String[]> registrationListener);
+    
     // Show candidate registration screen
     void showCandidateRegistrationScreen(Consumer<String[]> candidateRegistrationListener);
+    
+    // Show administrator panel
+    void showAdminPanel();
     
     // Update UI elements
     void setPositionsCount(int count);

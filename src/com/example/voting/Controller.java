@@ -2,6 +2,16 @@
 package com.example.voting;
 
 import java.util.List;
+import java.util.Optional;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.Dialog;
+import javafx.scene.layout.GridPane;
+import javafx.scene.control.Label;
+import javafx.scene.control.PasswordField;
+import javafx.scene.control.TextField;
+import javafx.geometry.Insets;
+import javafx.util.Pair;
 
 public class Controller {
     private Model model;
@@ -44,6 +54,9 @@ public class Controller {
             case "View Feedback Report":
                 handleViewFeedbackReport();
                 break;
+            case "Admin Login":
+                handleAdminLogin();
+                break;
             case "Exit":
                 view.showMessage("Thank you for using the Electronic Voting System!");
                 System.exit(0);
@@ -69,6 +82,9 @@ public class Controller {
             }
         }
         view.setCandidatesCount(candidateCount);
+        
+        // Force refresh of the entire dashboard to update charts
+        view.showMainMenu();
     }
 
     private void handleLogin() {
@@ -98,11 +114,12 @@ public class Controller {
     }
 
     private void handleSignUp() {
-        view.showRegistrationScreen(credentials -> {
+        view.showRegistrationWithRoleScreen(credentials -> {
             String username = credentials[0];
             String password = credentials[1];
+            String role = credentials[2]; // "admin" or "voter"
             
-            if (model.registerUser(username, password)) {
+            if (model.registerUserWithRole(username, password, role)) {
                 view.showMessage("Sign-up successful! You can now log in.");
                 view.showMainMenu();
             } else {
@@ -171,6 +188,58 @@ public class Controller {
                 view.showMainMenu();
             } else {
                 view.showMessage("Error registering candidate. It may already exist.");
+            }
+        });
+    }
+
+    private void handleAdminLogin() {
+        // Create a simple login dialog for admin
+        Dialog<Pair<String, String>> dialog = new Dialog<>();
+        dialog.setTitle("Administrator Login");
+        dialog.setHeaderText("Please enter your administrator credentials");
+        
+        // Set the button types
+        ButtonType loginButtonType = new ButtonType("Login", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(loginButtonType, ButtonType.CANCEL);
+        
+        // Create the username and password labels and fields
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.setPadding(new Insets(20, 150, 10, 10));
+        
+        TextField usernameField = new TextField();
+        usernameField.setPromptText("Admin Username");
+        PasswordField passwordField = new PasswordField();
+        passwordField.setPromptText("Admin Password");
+        
+        grid.add(new Label("Username:"), 0, 0);
+        grid.add(usernameField, 1, 0);
+        grid.add(new Label("Password:"), 0, 1);
+        grid.add(passwordField, 1, 1);
+        
+        dialog.getDialogPane().setContent(grid);
+        
+        // Convert the result to a username-password-pair when the login button is clicked
+        dialog.setResultConverter(dialogButton -> {
+            if (dialogButton == loginButtonType) {
+                return new Pair<>(usernameField.getText(), passwordField.getText());
+            }
+            return null;
+        });
+        
+        Optional<Pair<String, String>> result = dialog.showAndWait();
+        
+        result.ifPresent(usernamePassword -> {
+            String username = usernamePassword.getKey();
+            String password = usernamePassword.getValue();
+            
+            // Check if the user exists and has admin role, or use default admin credentials
+            if ((model.authenticateUser(username, password) && model.isAdmin(username)) || 
+                ("admin".equals(username) && model.verifyAdminPassword(password))) {
+                view.showAdminPanel();
+            } else {
+                view.showMessage("Invalid administrator credentials");
             }
         });
     }

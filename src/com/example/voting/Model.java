@@ -27,8 +27,40 @@ public class Model {
     public Model() {
         try {
             connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/evoting", "root", "Helloworld@2025");
+            
+            // Check and add the role column if it doesn't exist
+            ensureRoleColumnExists();
+            
         } catch (SQLException e) {
             System.err.println("Error connecting to database: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Ensures the role column exists in the users table
+     */
+    private void ensureRoleColumnExists() {
+        try {
+            // Check if the role column exists
+            Statement checkStatement = connection.createStatement();
+            try {
+                checkStatement.executeQuery("SELECT role FROM users LIMIT 1");
+                // Column exists, no need to add it
+            } catch (SQLException e) {
+                // Column doesn't exist, add it
+                if (e.getMessage().contains("Unknown column")) {
+                    Statement alterStatement = connection.createStatement();
+                    alterStatement.executeUpdate("ALTER TABLE users ADD COLUMN role VARCHAR(10) DEFAULT 'voter'");
+                    System.out.println("Added 'role' column to users table");
+                    
+                    // Also add an admin user if one doesn't exist
+                    PreparedStatement insertStatement = connection.prepareStatement(
+                        "INSERT IGNORE INTO users (username, password, role) VALUES ('admin', 'admin123', 'admin')");
+                    insertStatement.executeUpdate();
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error checking or adding role column: " + e.getMessage());
         }
     }
 
@@ -91,6 +123,46 @@ public class Model {
         }
     }
 
+    /**
+     * Register a user with a specific role
+     * @param username Username to register
+     * @param password Password for the account
+     * @param role Role for the user (admin or voter)
+     * @return true if registration was successful
+     */
+    public boolean registerUserWithRole(String username, String password, String role) {
+        String query = "INSERT INTO users (username, password, role) VALUES (?, ?, ?)";
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setString(1, username);
+            statement.setString(2, password);
+            statement.setString(3, role);
+            statement.executeUpdate();
+            return true;
+        } catch (SQLException e) {
+            System.err.println("Error during registration: " + e.getMessage());
+            return false;
+        }
+    }
+    
+    /**
+     * Check if a user has admin role
+     * @param username Username to check
+     * @return true if user is an admin
+     */
+    public boolean isAdmin(String username) {
+        String query = "SELECT role FROM users WHERE username = ?";
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setString(1, username);
+            ResultSet resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return "admin".equals(resultSet.getString("role"));
+            }
+        } catch (SQLException e) {
+            System.err.println("Error checking admin status: " + e.getMessage());
+        }
+        return false;
+    }
+
     public boolean registerCandidate(String candidateName, String constituency) {
         String query = "INSERT INTO candidates (name, constituency, votes) VALUES (?, ?, 0)";
         try (PreparedStatement statement = connection.prepareStatement(query)) {
@@ -149,7 +221,7 @@ public class Model {
     public boolean castVote(String username, String candidate) {
         try {
             int totalVotes = getTotalVotes();
-            if (totalVotes >= 20) {
+            if (totalVotes >= 100) {
                 return false;
             }
             String updateVotesQuery = "UPDATE candidates SET votes = votes + 1 WHERE name = ?";
@@ -241,5 +313,206 @@ public class Model {
             e.printStackTrace();
         }
         return results;
+    }
+
+    // Admin operations
+    
+    /**
+     * Get total number of users in the system
+     * @return total number of users
+     */
+    public int getTotalUsers() {
+        // Placeholder - in a real system this would query the database
+        return 25; // Example value
+    }
+    
+    /**
+     * Get number of users who have voted
+     * @return number of users who have voted
+     */
+    public int getVotedUsers() {
+        // Placeholder - in a real system this would query the database
+        return 18; // Example value
+    }
+    
+    /**
+     * Get total number of candidates across all constituencies
+     * @return total number of candidates
+     */
+    public int getTotalCandidates() {
+        int count = 0;
+        for (String constituency : getConstituencies()) {
+            List<String> candidates = getCandidatesByConstituency(constituency);
+            if (candidates != null) {
+                count += candidates.size();
+            }
+        }
+        return count;
+    }
+    
+    /**
+     * Get total number of constituencies
+     * @return total number of constituencies
+     */
+    public int getTotalConstituencies() {
+        return getConstituencies().size();
+    }
+    
+    /**
+     * Get all candidates with their vote counts for display in the admin panel
+     * @return list of CandidateItem objects
+     */
+    public List<AdminView.CandidateItem> getAllCandidates() {
+        List<AdminView.CandidateItem> result = new ArrayList<>();
+        
+        String query = "SELECT name, constituency, votes FROM candidates";
+        try (Statement statement = connection.createStatement()) {
+            ResultSet resultSet = statement.executeQuery(query);
+            while (resultSet.next()) {
+                String name = resultSet.getString("name");
+                String constituency = resultSet.getString("constituency");
+                int votes = resultSet.getInt("votes");
+                result.add(new AdminView.CandidateItem(name, constituency, votes));
+            }
+        } catch (SQLException e) {
+            System.err.println("Error fetching all candidates: " + e.getMessage());
+        }
+        
+        return result;
+    }
+    
+    /**
+     * Get candidate votes for chart display
+     * @return list of CandidateVote objects
+     */
+    public List<AdminView.CandidateVote> getCandidateVotesForChart() {
+        List<AdminView.CandidateVote> result = new ArrayList<>();
+        
+        String query = "SELECT name, votes FROM candidates";
+        try (Statement statement = connection.createStatement()) {
+            ResultSet resultSet = statement.executeQuery(query);
+            while (resultSet.next()) {
+                String name = resultSet.getString("name");
+                int votes = resultSet.getInt("votes");
+                result.add(new AdminView.CandidateVote(name, votes));
+            }
+        } catch (SQLException e) {
+            System.err.println("Error fetching candidate votes for chart: " + e.getMessage());
+        }
+        
+        return result;
+    }
+    
+    /**
+     * Get candidate votes grouped by constituency for pie charts
+     * @return Map of constituency name to list of candidate votes
+     */
+    public Map<String, List<JavaFXView.CandidateVote>> getCandidateVotesByConstituencyForCharts() {
+        Map<String, List<JavaFXView.CandidateVote>> result = new HashMap<>();
+        
+        List<String> constituencies = getConstituencies();
+        for (String constituency : constituencies) {
+            List<JavaFXView.CandidateVote> constituencyVotes = new ArrayList<>();
+            
+            String query = "SELECT name, votes FROM candidates WHERE constituency = ?";
+            try (PreparedStatement statement = connection.prepareStatement(query)) {
+                statement.setString(1, constituency);
+                ResultSet resultSet = statement.executeQuery();
+                while (resultSet.next()) {
+                    String candidateName = resultSet.getString("name");
+                    int votes = resultSet.getInt("votes");
+                    constituencyVotes.add(new JavaFXView.CandidateVote(candidateName, String.valueOf(votes)));
+                }
+            } catch (SQLException e) {
+                System.err.println("Error fetching candidate votes by constituency: " + e.getMessage());
+            }
+            
+            // Only add constituencies that have candidates
+            if (!constituencyVotes.isEmpty()) {
+                result.put(constituency, constituencyVotes);
+            }
+        }
+        
+        return result;
+    }
+    
+    /**
+     * Get votes for a specific candidate
+     * @param candidate the candidate name
+     * @return number of votes
+     */
+    private int getVotesForCandidate(String candidate) {
+        // Placeholder - in a real system this would query the database
+        // Return a random number between 0 and 50 for demonstration
+        return new java.util.Random().nextInt(51);
+    }
+    
+    /**
+     * Delete a candidate from the system
+     * @param name the candidate name
+     * @param constituency the constituency
+     * @return true if successful
+     */
+    public boolean deleteCandidate(String name, String constituency) {
+        String query = "DELETE FROM candidates WHERE name = ? AND constituency = ?";
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setString(1, name);
+            statement.setString(2, constituency);
+            int rowsAffected = statement.executeUpdate();
+            return rowsAffected > 0;
+        } catch (SQLException e) {
+            System.err.println("Error deleting candidate: " + e.getMessage());
+            return false;
+        }
+    }
+    
+    /**
+     * Reset all vote counts
+     * @return true if successful
+     */
+    public boolean resetAllVotes() {
+        // Placeholder - in a real system this would set all vote counts to zero
+        return true;
+    }
+    
+    /**
+     * Reset all user voting status
+     * @return true if successful
+     */
+    public boolean resetUserVoteStatus() {
+        // Placeholder - in a real system this would reset the has_voted flag for all users
+        return true;
+    }
+    
+    /**
+     * Delete all candidates
+     * @return true if successful
+     */
+    public boolean deleteAllCandidates() {
+        // Placeholder - in a real system this would delete all candidates from the database
+        return true;
+    }
+    
+    /**
+     * Perform a full system reset
+     * @return true if successful
+     */
+    public boolean fullSystemReset() {
+        // Placeholder - in a real system this would reset votes, user voting status, and delete all candidates
+        boolean resetVotes = resetAllVotes();
+        boolean resetUsers = resetUserVoteStatus();
+        boolean deleteAllCandidates = deleteAllCandidates();
+        
+        return resetVotes && resetUsers && deleteAllCandidates;
+    }
+    
+    /**
+     * Verify admin password
+     * @param password the password to verify
+     * @return true if the password is correct
+     */
+    public boolean verifyAdminPassword(String password) {
+        // Simple admin password for demonstration
+        return "admin123".equals(password);
     }
 }
